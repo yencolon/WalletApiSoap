@@ -1,43 +1,60 @@
 <?php
 
 namespace App\Models;
-
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-
-class User extends Authenticatable
+use Doctrine\ORM\Mapping AS ORM;
+use Illuminate\Contracts\Auth\Authenticatable;
+use  \LaravelDoctrine\ORM\Auth\Authenticatable AS Auth;
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="users")
+ */
+class User implements Authenticatable
 {
-    use HasFactory, Notifiable;
+    use Auth;
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    protected $id;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * @var string
+     * @ORM\Column(type="string")
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    public $name;
 
     /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
+     * @var string
+     * @ORM\Column(type="string")
      */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    public $email;
 
     /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
+     * User constructor
+     * @param string $name
+     * @param string $email
+     * @param string $password
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    public function __construct($name, $email, $password)
+    {
+        $this->name = $name;
+        $this->email = $email;
+        $this->password = $password;
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'id';
+    }
+
+    public function getAuthIdentifier()
+    {
+        return $this->id;
+    }
+
+    public function getPassword()
+    {
+        return $this->password;
+    }
 }
