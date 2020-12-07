@@ -4,6 +4,8 @@ namespace App\Models;
 use Doctrine\ORM\Mapping AS ORM;
 use Illuminate\Contracts\Auth\Authenticatable;
 use  \LaravelDoctrine\ORM\Auth\Authenticatable AS Auth;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="users")
@@ -22,23 +24,46 @@ class User implements Authenticatable
      * @var string
      * @ORM\Column(type="string")
      */
-    public $name;
+    protected $name;
+
+      /**
+     * @var string
+     * @ORM\Column(type="string")
+     */
+    protected $lastname;
 
     /**
      * @var string
      * @ORM\Column(type="string")
      */
-    public $email;
+    protected $email;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string")
+     */
+    protected $phone;
+
+    /**
+     * @ORM\OneToOne(targetEntity="Wallet", mappedBy="user", cascade={"persist"})
+     * @var Wallet
+     */
+    protected $wallet;
 
     /**
      * User constructor
      * @param string $name
+     * @param string $lastame
      * @param string $email
      * @param string $password
+     * @param string $phone
+     * @param string $lastame
      */
-    public function __construct($name, $email, $password)
+    public function __construct($name, $lastame, $phone, $email, $password)
     {
         $this->name = $name;
+        $this->lastname = $lastame;
+        $this->phone = $phone;
         $this->email = $email;
         $this->password = $password;
     }
@@ -57,4 +82,16 @@ class User implements Authenticatable
     {
         return $this->password;
     }
+
+    public function setWallet(Wallet $wallet)
+    {
+        $this->wallet = $wallet;
+        $wallet->setUser($this);
+    }
+    
+    public function getWallet()
+    {
+        return $this->wallet;
+    }
+
 }
