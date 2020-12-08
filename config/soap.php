@@ -1,9 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Types\LoginUser;
-// use App\Models\User;
-// use App\Types\RegisterUser;
+use App\Http\Controllers\WalletController;
+use App\Models\Wallet;
+use App\Models\WalletRecord;
+use App\Utils\CommonResponse;
 
 return [
     'services'          => [
@@ -15,13 +16,28 @@ return [
             ],
             'types'             => [
                 'user'          => User::class,
-                'loginUser'     => LoginUser::class,
-                'registerUser'  => RegisterUser::class
+                'commonResponse' => CommonResponse::class
             ],
             'strategy'          => 'ArrayOfTypeComplex',
             'headers'           => [
                 'Cache-Control'     => 'no-cache, no-store',
-                'user_agent' => 'PHPSoapClient'
+            ],
+            'options'           => []
+        ],
+        'wallet'              => [
+            'name'              => 'Wallet',
+            'class'             =>  WalletController::class,
+            'exceptions'        => [
+                'Exception'
+            ],
+            'types'             => [
+                'wallet'        => Wallet::class,
+                'record'        => WalletRecord::class,
+                'commonResponse' => CommonResponse::class
+            ],
+            'strategy'          => 'ArrayOfTypeComplex',
+            'headers'           => [
+                'Cache-Control'     => 'no-cache, no-store',
             ],
             'options'           => []
         ]
