@@ -19,6 +19,7 @@ class CreateWalletRecordsTable extends Migration
             $table->double('amount');
             $table->string('status');
             $table->string('type');
+            $table->string('token');
             $table->timestamps();
         });
     }

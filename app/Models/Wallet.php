@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping\JoinColumn;
 
 /**
  * @ORM\Entity
@@ -25,17 +26,18 @@ class Wallet
     protected $credit;
 
     /**
-    * @ORM\OneToMany(targetEntity="WalletRecord", mappedBy="wallet", cascade={"persist"})
-    * @var ArrayCollection|WalletRecord[]
-    */
+     * @ORM\OneToMany(targetEntity="WalletRecord", mappedBy="wallet", cascade={"persist"})
+     * @var ArrayCollection|WalletRecord[]
+     */
     protected $records;
 
     /**
-    * @ORM\OneToOne(targetEntity="User", inversedBy="wallet")
-    * @var User
-    */
+     * @ORM\OneToOne(targetEntity="User", inversedBy="wallet")
+     * @JoinColumn(name="user_id", referencedColumnName="id")
+     * @var User
+     */
     protected $user;
-    
+
 
     public function __construct($credit)
     {
@@ -45,15 +47,54 @@ class Wallet
 
     public function addRecord(WalletRecord $record)
     {
-        if(!$this->records->contains($record)) {
+        if (!$this->records->contains($record)) {
             $record->setWallet($this);
             $this->records->add($record);
         }
     }
 
-    public function setUser(User $user){
-        $this->user = $user;
+    public function getRecords()
+    {
+        return $this->records;
     }
 
-    
+    public function setUser(User $user)
+    {
+        $this->user = $user;
+    }
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function getCredit()
+    {
+        return $this->credit;
+    }
+
+    public function setCredit($credit)
+    {
+        $this->credit = $credit;
+    }
+
+    public function getFormattedWallet()
+    {
+        return [
+            'id' => $this->id,
+            'credit' => $this->credit,
+            'records' => $this->getRecords()->map(function ($record) {
+                return [
+                    'id' => $record->id,
+                    'amount' => $record->amount,
+                    'type' => $record->tye,
+                    'status' => $record->status
+                ];
+            })
+        ];
+    }
 }

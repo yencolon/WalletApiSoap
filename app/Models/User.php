@@ -44,8 +44,14 @@ class User implements Authenticatable
      */
     protected $phone;
 
+     /**
+     * @var string
+     * @ORM\Column(type="string")
+     */
+    protected $document;
+
     /**
-     * @ORM\OneToOne(targetEntity="Wallet", mappedBy="user", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="Wallet", mappedBy="user")
      * @var Wallet
      */
     protected $wallet;
@@ -59,11 +65,12 @@ class User implements Authenticatable
      * @param string $phone
      * @param string $lastame
      */
-    public function __construct($name, $lastame, $phone, $email, $password)
+    public function __construct($name, $lastame, $phone, $document, $email, $password)
     {
         $this->name = $name;
         $this->lastname = $lastame;
         $this->phone = $phone;
+        $this->document = $document;
         $this->email = $email;
         $this->password = $password;
     }
@@ -92,6 +99,14 @@ class User implements Authenticatable
     public function getWallet()
     {
         return $this->wallet;
+    }
+
+    public function getDocument(){
+        return $this->document;
+    }
+
+    public function getPhone(){
+        return $this->phone;
     }
 
 }
