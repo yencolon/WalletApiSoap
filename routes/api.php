@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\TestController;
+use App\Http\Controllers\AuthController;
+use App\Http\SoapServer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,5 +20,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::group(['prefix' => 'auth'], function () {
+    Route::post('/', [AuthController::class, 'login']);
+});
 
-Route::get('/test/{key}', [TestController::class, 'server']);
+Route::get('/soap/{key}', [SoapServer::class, 'server']);
+Route::post('/soap/{key}', [SoapServer::class, 'server']);
