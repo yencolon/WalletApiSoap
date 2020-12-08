@@ -88,12 +88,7 @@ class Wallet
             'id' => $this->id,
             'credit' => $this->credit,
             'records' => $this->getRecords()->map(function ($record) {
-                return [
-                    'id' => $record->id,
-                    'amount' => $record->amount,
-                    'type' => $record->tye,
-                    'status' => $record->status
-                ];
+                return $record->getFormattedRecord();
             })
         ];
     }
