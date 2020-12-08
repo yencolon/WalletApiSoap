@@ -122,7 +122,6 @@ class SoapServer
         try {
 
             $this->init($key);
-
             foreach ($this->headers as $key => $value) {
                 $output->headers->set($key, $value);
             }
