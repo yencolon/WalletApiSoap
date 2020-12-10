@@ -31,7 +31,7 @@ class WalletRecord
 
     /**
      * @var string
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="string")
      */
     protected $type;
 
@@ -56,7 +56,8 @@ class WalletRecord
         $this->token = $token;
     }
 
-    public function getId(){
+    public function getId()
+    {
         return $this->id;
     }
 
@@ -70,24 +71,39 @@ class WalletRecord
         return $this->wallet;
     }
 
-    public function getToken(){
+    public function getToken()
+    {
         return $this->token;
     }
 
-    public function setToken($token){
+    public function setToken($token)
+    {
         $this->token = $token;
     }
 
-    public function setStatus($status){
+    public function setStatus($status)
+    {
         $this->status = $status;
     }
 
-    public function getStatus(){
+    public function getStatus()
+    {
         return $this->status;
     }
 
-    public function getFormattedRecord(){
-        return [
+    public function getAmount()
+    {
+        return $this->amount;
+    }
+    
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    public function getFormattedRecord()
+    {
+        return (object) [
             'id' => $this->id,
             'amount' => $this->amount,
             'type' => $this->type,

@@ -20,7 +20,7 @@ class Wallet
     protected $id;
 
     /**
-     * @var double
+     * @var float
      * @ORM\Column(type="float")
      */
     protected $credit;
@@ -33,12 +33,16 @@ class Wallet
 
     /**
      * @ORM\OneToOne(targetEntity="User", inversedBy="wallet")
-     * @JoinColumn(name="user_id", referencedColumnName="id")
+     * 
      * @var User
      */
     protected $user;
 
-
+    /**
+     * Wallet constructor
+     * 
+     * @param float $credit
+     */
     public function __construct($credit)
     {
         $this->credit = $credit;
@@ -84,7 +88,7 @@ class Wallet
 
     public function getFormattedWallet()
     {
-        return [
+        return (object) [
             'id' => $this->id,
             'credit' => $this->credit,
             'records' => $this->getRecords()->map(function ($record) {

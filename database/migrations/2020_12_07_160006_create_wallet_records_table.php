@@ -20,6 +20,7 @@ class CreateWalletRecordsTable extends Migration
             $table->string('status');
             $table->string('type');
             $table->string('token');
+            $table->foreign('wallet_id')->references('id')->on('wallets')->onDelete('cascade');
             $table->timestamps();
         });
     }

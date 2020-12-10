@@ -3,8 +3,8 @@
 namespace App\Models;
 use Doctrine\ORM\Mapping AS ORM;
 use Illuminate\Contracts\Auth\Authenticatable;
-use  \LaravelDoctrine\ORM\Auth\Authenticatable AS Auth;
-use LaravelDoctrine\ORM\Facades\EntityManager;
+use Illuminate\Support\Facades\Hash;
+use \LaravelDoctrine\ORM\Auth\Authenticatable AS Auth;
 
 /**
  * @ORM\Entity
@@ -72,7 +72,7 @@ class User implements Authenticatable
         $this->phone = $phone;
         $this->document = $document;
         $this->email = $email;
-        $this->password = $password;
+        $this->password = Hash::make($password);
     }
 
     public function getAuthIdentifierName()
@@ -109,4 +109,18 @@ class User implements Authenticatable
         return $this->phone;
     }
 
+    public function getEmail(){
+        return $this->email;
+    }
+
+    public function getFormattedUser() {
+        return (object) [
+            'id' => $this->id,
+            'name' => $this->name,
+            'lastname' => $this->lastname,
+            'document' => $this->document,
+            'phone' => $this->phone,
+            'email' => $this->email
+        ];
+    }
 }
