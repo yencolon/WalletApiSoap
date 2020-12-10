@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enum\RecordStatus;
 use App\Enum\RecordType;
+use App\Mail\ConfirmationCode;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletRecord;
 use App\Utils\CommonResponse;
 use Exception;
+use Illuminate\Support\Facades\Mail;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 
 class WalletController
@@ -86,8 +88,9 @@ class WalletController
         EntityManager::flush();
 
         try {
-            // Mail::to($existingUser->getEmail())->send(new ConfirmationCode(1000));
+            Mail::to($existingUser->getEmail())->send(new ConfirmationCode($token));
         } catch (Exception $e) {
+           
         }
         return new CommonResponse(
             200,
@@ -107,7 +110,7 @@ class WalletController
     {
         $existingRecord = EntityManager::find(WalletRecord::class, $recordId);
 
-        if (!$existingRecord || $existingRecord->getType() != RecordType::PURCHASE || $existingRecord->getStatus()) {
+        if (!$existingRecord || $existingRecord->getType() != RecordType::PURCHASE || $existingRecord->getStatus() != RecordStatus::PENDING ) {
             header("Status: 404");
             return new CommonResponse(404, 'Record No Existe');
         }
@@ -171,6 +174,7 @@ class WalletController
     public function getWalletCredit($document, $phone)
     {
         $existingUser = EntityManager::createQuery("SELECT u FROM \App\Models\User u Where u.document = $document AND u.phone = $phone")->getSingleResult();
+        
         if (!$existingUser || !$existingUser->getWallet()) {
             header("Status: 404");
             return new CommonResponse(404, 'No Hay Usuario Asociado A Documento Dado');

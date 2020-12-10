@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // \App\Models\User::factory(10)->create();
-        $user = new User('Jhon', 'Smith', '12345678', '22920784', 'jhon@email.com', Hash::make('12345678'));
+        $user = new User('Jhon', 'Smith', '12345678', '22920784', 'jhon@email.com', '12345678');
         $wallet = new Wallet(0);
         $wallet->setUser($user);
         EntityManager::persist($user);
