@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletRecord;
 use App\Utils\CommonResponse;
+use Exception;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 
 class WalletController
@@ -25,12 +26,12 @@ class WalletController
 
         if (!$existingUser || $existingUser->getWallet()) {
             header("Status: 404");
-            return new CommonResponse(404, 'User does not exists or has not a wallet');
+            return new CommonResponse(404, 'El Usuario No Existe');
         }
 
         $existingUser->setWallet(new Wallet($credit));
         EntityManager::flush($existingUser);
-        return new CommonResponse(200, 'Wallet Create');
+        return new CommonResponse(200, 'Billetera Creada');
     }
 
     /**
@@ -45,34 +46,36 @@ class WalletController
 
         if (!$existingUser || !$existingUser->getWallet()) {
             header("Status: 404");
-            return new CommonResponse(404, 'User does not has wallet');
+            return new CommonResponse(404, 'Usuario No Posee Billetera');
         }
 
-        return new CommonResponse(200, 'Success', $existingUser->getWallet()->getFormattedWallet());
+        return new CommonResponse(200, 'Hecho', $existingUser->getWallet()->getFormattedWallet());
     }
 
     /**
      * Create a Purchase that need to be verified
      *
-     * @param int $userId
+     * @param string $document
+     * @param float $amount
+     * @param string $token
+     * 
      * @return \App\Utils\CommonResponse
      */
-    public function createPurchase($userId, $amount, $token)
+    public function createPurchase($document, $amount, $token)
     {
-        
-        $existingUser = EntityManager::find(User::class, $userId);
+        $existingUser = EntityManager::createQuery("SELECT u FROM \App\Models\User u Where u.document = $document")->getSingleResult();
         $existingWallet = null;
-        
-        if (!$existingUser ) {
+
+        if (!$existingUser) {
             header("Status: 404");
-            return new CommonResponse(404, 'Wallet does not exists');
+            return new CommonResponse(404, 'Billetera No Existe');
         }
-        
+
         $existingWallet = $existingUser->getWallet();
 
-        if($existingWallet->getCredit() < $amount) {
+        if ($existingWallet->getCredit() < floatval($amount)) {
             header("Status: 403");
-            return new CommonResponse(403, 'Wallet does not have enough credits');
+            return new CommonResponse(403, 'Billetera No Posee Suficientes Fondos');
         }
 
         $record = new WalletRecord($amount, RecordStatus::PENDING, RecordType::PURCHASE, $token);
@@ -82,88 +85,97 @@ class WalletController
         EntityManager::persist($existingWallet);
         EntityManager::flush();
 
-        return new CommonResponse(200, 'Success', $record->getFormattedRecord());
+        try {
+            // Mail::to($existingUser->getEmail())->send(new ConfirmationCode(1000));
+        } catch (Exception $e) {
+        }
+        return new CommonResponse(
+            200,
+            'Se ha enviado un correo al usuario',
+            $record->getFormattedRecord()
+        );
     }
 
     /**
      * Get Wallet is succesful return wallet and records otherwise throws an exception
      *
-     * @param int $userId
      * @param int $recordId
      * @param string $token
      * @return \App\Utils\CommonResponse
      */
-    public function verifyPurchase($userId, $recordId, $token)
+    public function verifyPurchase($recordId, $token)
     {
-        $existingUser = EntityManager::find(User::class, $userId);
-        $existingWallet = null;
+        $existingRecord = EntityManager::find(WalletRecord::class, $recordId);
 
-        if (!$existingUser) {
+        if (!$existingRecord || $existingRecord->getType() != RecordType::PURCHASE || $existingRecord->getStatus()) {
             header("Status: 404");
-            return new CommonResponse(404, 'Wallet does not exists');
+            return new CommonResponse(404, 'Record No Existe');
         }
 
-        $existingWallet = $existingUser->getWallet();
-        $record = $existingWallet->getRecords()->filter(function ($record) use ($recordId) {
-            return $record->getId() == $recordId;
-        })->first();
-
-        if (!$record && $record->getToken() != $token && $record->getStatus() != RecordStatus::APPROVED) {
-            return new CommonResponse(403, 'Invalid token');
+        $existingWallet = $existingRecord->getWallet();
+      
+        if ($existingRecord->getToken() != $token && $existingRecord->getStatus() != RecordStatus::APPROVED) {
+            return new CommonResponse(403, 'Token De Verificacion Invalido');
         }
 
-        $record->setStatus(RecordStatus::APPROVED);
-        EntityManager::persist($record);
-        EntityManager::flush($record);
-        return new CommonResponse(200, 'Success', $record->getFormattedRecord());
+        $existingWallet->setCredit($existingWallet->getCredit() - $existingRecord->getAmount());
+        $existingRecord->setStatus(RecordStatus::APPROVED);
+
+        EntityManager::persist($existingRecord);
+        EntityManager::persist($existingWallet);
+        EntityManager::flush($existingRecord);
+
+        return new CommonResponse(200, 'Hecho', $existingRecord->getFormattedRecord());
     }
 
     /**
      * Add credit to wallet if document and phone match with wallet's user
      * 
-     * @param int $userId
      * @param string $document
      * @param string $phone
-     * @param float $amount
+     * @param string $amount
      * @return \App\Utils\CommonResponse
      */
-    public function addCreditToWallet($userId, $document, $phone, $amount)
+    public function addCreditToWallet($document, $phone, $amount)
     {
-        $existingUser = EntityManager::find(User::class, $userId);
+        $existingUser = EntityManager::createQuery("SELECT u FROM \App\Models\User u Where u.document = $document AND u.phone = $phone")->getSingleResult();
         $existingWallet = null;
-      
+
         if (!$existingUser) {
             header("Status: 404");
-            return new CommonResponse(404, 'User does not exists');
+            return new CommonResponse(404, 'No Hay Usuario Asociado A Documento Dado');
         }
+
         $existingWallet = $existingUser->getWallet();
+        $currentCredit = $existingWallet->getCredit();
 
-        if ($existingUser->getDocument() == $document && $existingUser->getPhone() == $phone) {
-            $currentCredit = $existingWallet->getCredit();
-            $existingWallet->setCredit($currentCredit + $amount);
-            EntityManager::persist($existingWallet);
-            EntityManager::flush($existingWallet);
-            return new CommonResponse(200, 'Success', $existingWallet->getFormattedWallet());
-        }
+        $record = new WalletRecord($amount, RecordStatus::APPROVED, RecordType::RECHARGE, '');
 
-        return new CommonResponse(403, 'Invalid params');
+        $existingWallet->addRecord($record);
+        $existingWallet->setCredit($currentCredit + $amount);
+
+        EntityManager::persist($existingWallet);
+        EntityManager::flush($existingWallet);
+
+        return new CommonResponse(200, 'Hecho', $existingWallet->getFormattedWallet());
     }
 
-     /**
+    /**
      * Get Wallet credit succesful return wallet credit
      *
-     * @param int $userId
+     * @param string $document
+     * @param string $phone
+     * 
      * @return \App\Utils\CommonResponse
      */
-    public function getWalletCredit($userId)
+    public function getWalletCredit($document, $phone)
     {
-        $existingUser = EntityManager::find(User::class, $userId);
-
+        $existingUser = EntityManager::createQuery("SELECT u FROM \App\Models\User u Where u.document = $document AND u.phone = $phone")->getSingleResult();
         if (!$existingUser || !$existingUser->getWallet()) {
             header("Status: 404");
-            return new CommonResponse(404, 'User does not has wallet');
+            return new CommonResponse(404, 'No Hay Usuario Asociado A Documento Dado');
         }
 
-        return new CommonResponse(200, 'Success', $existingUser->getWallet()->getCredit());
+        return new CommonResponse(200, 'Hecho', (object)['credit' => $existingUser->getWallet()->getCredit()]);
     }
 }
