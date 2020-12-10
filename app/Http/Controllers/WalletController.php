@@ -121,7 +121,7 @@ class WalletController
             return new CommonResponse(403, 'Token De Verificacion Invalido');
         }
 
-        $existingWallet->setCredit($existingWallet->getCredit() - $existingRecord->getAmount());
+        $existingWallet->setCredit(floatval($existingWallet->getCredit()) - floatval($existingRecord->getAmount()));
         $existingRecord->setStatus(RecordStatus::APPROVED);
 
         EntityManager::persist($existingRecord);
