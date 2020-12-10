@@ -88,7 +88,7 @@ class WalletController
         EntityManager::flush();
 
         try {
-            Mail::to($existingUser->getEmail())->send(new ConfirmationCode($token));
+           Mail::to($existingUser->getEmail())->send(new ConfirmationCode($token));
         } catch (Exception $e) {
            
         }
@@ -126,7 +126,7 @@ class WalletController
 
         EntityManager::persist($existingRecord);
         EntityManager::persist($existingWallet);
-        EntityManager::flush($existingRecord);
+        EntityManager::flush();
 
         return new CommonResponse(200, 'Hecho', $existingRecord->getFormattedRecord());
     }
