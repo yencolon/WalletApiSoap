@@ -26,7 +26,7 @@ class AuthController
             return new CommonResponse(401, 'Invalid credential');
         }
 
-        return new CommonResponse(200, 'Login', auth()->user());
+        return new CommonResponse(200, 'Login', auth()->user()->getFormattedUser());
     }
 
     /**
@@ -42,14 +42,17 @@ class AuthController
     public function register($name, $lastname, $phone, $document, $email, $password)
     {
         $user = new User($name, $lastname, $phone, $document, $email, $password);
-        $user->setWallet(new Wallet(0));
+        $wallet = new Wallet(0);
+        $user->setWallet($wallet);
+        
         try {
             EntityManager::persist($user);
+            EntityManager::persist($wallet);
             EntityManager::flush();
         } catch (\Exception $exception){
             return new CommonResponse(400, 'Email already registered');
         }
       
-        return new CommonResponse(200, 'Registered Successfuly', $user);
+        return new CommonResponse(200, 'Registered Successfuly', $user->getFormattedUser());
     }
 }
